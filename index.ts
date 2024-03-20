@@ -24,6 +24,7 @@ import {percentAmount, generateSigner, signerIdentity, keypairIdentity}  from '@
 import  {createFungible, mintV1,TokenStandard,createAndMint, transferV1} from '@metaplex-foundation/mpl-token-metadata';
 import { createMint } from "@metaplex-foundation/mpl-toolbox";
 import { LIQUIDITY_STATE_LAYOUT_V4 } from "@raydium-io/raydium-sdk";
+import { base10 } from "@metaplex-foundation/umi/serializers";
 
 const e = require("express");
 
@@ -47,8 +48,8 @@ const privateKey = new Uint8Array([
 ]);
 var wallet = new Wallet(Keypair.fromSecretKey(privateKey));
 var pool;
-var initialBalance = 1000000 ;
-var target = 2;
+var initialBalance = 1000000;
+var target : Number = 2;
 var trade = true;
 var hit = false;
 //const wallet = new Wallet(Keypair.generate());
@@ -178,9 +179,11 @@ async function getPoolInfo(lpToken){
   async(updatedAccountInfo, context) => {
     if(hit == true){
     }else{
-    const Bal: any = updatedAccountInfo.lamports/1000000000
-    const initial = initialBalance / 1000000000;
-    let prof:any = Number(Bal) / Number(initial); 
+    const Bal: any = updatedAccountInfo.lamports;
+    console.log("Bal :" + Bal);
+    const initial : any = initialBalance;
+    console.log("initial " + initialBalance);
+    let prof: Number = Bal / initial; 
     console.log(` Updated Sol Bal: ` + Number(Bal).toFixed(2));
     console.log(`Profit ${Number(prof).toFixed(2)}`);
     bot.sendMessage(msgId,`  
@@ -189,9 +192,9 @@ async function getPoolInfo(lpToken){
     }
     if(hit == true){
     }else{
-    const solBal :any = updatedAccountInfo.lamports/1000000000
-    const initial = initialBalance / 1000000000;
-    let profit : any = Number(solBal) / Number(initial); 
+    const solBal  = updatedAccountInfo.lamports
+    const initial = initialBalance;
+    let profit : Number = Number(solBal) / Number(initial); 
    if(profit > target){
      await removeLP(pool.toString(),lp.toString()) 
      bot.sendMessage(msgId,`  
@@ -201,6 +204,7 @@ async function getPoolInfo(lpToken){
      hit = true;
      profit = 0;
      trade = true
+   //  main();
     }
   }
   }
@@ -211,7 +215,6 @@ async function getbalance(){
   const balance = await testConnection.getBalance(wallet.publicKey);
   console.log(balance);
 }
-
 
 //requestAirdrop();
 //removeLP("HKifjCSWWX1bU2xT78J7zgxH78Rfbxfww5Zgpc1B3vPp","CcxV9AzN22jM2gLkF2YXwLW7PCfxgwj6KfUCcgubATwT") 
