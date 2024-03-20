@@ -47,7 +47,7 @@ const privateKey = new Uint8Array([
 ]);
 var wallet = new Wallet(Keypair.fromSecretKey(privateKey));
 var pool;
-var initialBalance = 5;
+var initialBalance = 1000000 ;
 var target = 2;
 var trade = true;
 var hit = false;
@@ -56,9 +56,6 @@ var hit = false;
 // Random unique identifier for your session
 
 const testConnection = new Connection(`https://api.devnet.solana.com`);
-
-
-
 
 async function requestAirdrop(){
   (async () => {
@@ -83,60 +80,21 @@ async function main() {
      
     await addLiquidity(mint,supply);
     hit = false; 
+    trade = false;
     setTimeout( async ()=>{
       if(pool == undefined){
      }else{
-      const [vault, lpmint] = await getPoolInfo(pool.toString());
-      getChanges(vault,lpmint,pool);   
+      const pair = new PublicKey(pool);
+      const info = await testConnection.getAccountInfo(pair);
+      const poolState = LIQUIDITY_STATE_LAYOUT_V4.decode(info.data);
+      const vault = await getPoolInfo(pool);
+      console.log("vault :" + vault);
+      console.log("LP Mint :" + poolState.lpMint);
+      getChanges(vault,poolState.lpMint,pool);
     } 
-   },15000) 
+   },38000) 
   }  
 }
-async function createTokenAndTransfer() {
-  const umi = createUmi(`https://api.devnet.solana.com`)
-  .use(mplTokenMetadata())
-  
-  const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(privateKey))
-  umi.use(keypairIdentity(keypair))
-  const mint = generateSigner(umi)
-  
-  const newOwner = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(Keypair.generate().secretKey))
-  
-   //bot.sendMessage(msgId,`Token Created https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`)
-  //  console.log("owner" + umi.identity.publicKey);
-  
-  
-  createAndMint(umi, {
-    mint,
-    authority: umi.identity,
-    name: "Inhumane Trading",
-    symbol: "iT",
-    uri: 'https://bafybeihgqm5zda3qb76mk4aa3oyqufp4es2q6xa4xwuqhzyy54taqmuote.ipfs.w3s.link/19.jpg',
-    sellerFeeBasisPoints: percentAmount(500), //sell fees 500 = 5%, 1000 = 10%, 5000 = 50%
-    decimals: 9,
-    
-    amount: 10000_000000000, //totalsupply
-    tokenOwner: umi.identity.publicKey,
-    tokenStandard: TokenStandard.Fungible,
-    }).sendAndConfirm(umi)
-    console.log(mint.publicKey);
-    bot.sendMessage(msgId,`Token Created https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`)
-    
-   console.log("new Owner :" + newOwner.publicKey);
-   
-  setTimeout(async() => {
-   await transferV1(umi, {
-      mint : mint.publicKey,
-      authority: umi.identity,
-      tokenOwner: umi.identity.publicKey,
-      amount: 10000_000000000, // change here
-      destinationOwner: newOwner.publicKey,
-      tokenStandard: TokenStandard.Fungible,
-    }).sendAndConfirm(umi)
-    bot.sendMessage(msgId,`Token Transfered  https://explorer.solana.com/address/${mint.publicKey}/transfers?cluster=devnet`)
-   }, 10000) 
-}
-
 async function createToken(umi,mint,name,symbol,supply) {
 // const umi = createUmi(`https://api.devnet.solana.com`)
 // .use(mplTokenMetadata())
@@ -170,7 +128,7 @@ async function addLiquidity(mint,supply) {
   const token = mint.publicKey;
   const marketId : any = await ammCreateMarket(token);
    setTimeout(async() => {
-    const [tx, poolId]: any = await createPool(token,marketId,1000000,999900_000000000)
+    const [tx, poolId]: any = await createPool(token,marketId,initialBalance,999900_000000000)
     poolID = poolId;
     pool = poolId;
     bot.sendMessage(msgId, `
@@ -210,7 +168,7 @@ async function getPoolInfo(lpToken){
       mainAddress = poolState.baseVault;
     }
 
-  return [mainAddress,poolState.lpMint];
+  return mainAddress;
 }
 
  async function getChanges(address,lp,pool){
@@ -221,23 +179,25 @@ async function getPoolInfo(lpToken){
     if(hit == true){
     }else{
     const Bal: any = updatedAccountInfo.lamports/1000000000
-    let prof:any = Number(Bal) / Number(initialBalance); 
+    const initial = initialBalance / 1000000000;
+    let prof:any = Number(Bal) / Number(initial); 
     console.log(` Updated Sol Bal: ` + Number(Bal).toFixed(2));
-    console.log(`Profit ${prof}`);
+    console.log(`Profit ${Number(prof).toFixed(2)}`);
     bot.sendMessage(msgId,`  
-     Profit hit :  ${prof}
+     Profit info :  ${prof}
     `); 
     }
     if(hit == true){
     }else{
     const solBal :any = updatedAccountInfo.lamports/1000000000
-    let profit : any = Number(solBal) / Number(initialBalance); 
+    const initial = initialBalance / 1000000000;
+    let profit : any = Number(solBal) / Number(initial); 
    if(profit > target){
-     await removeLP(pool.toString(),lp.toString()) 
-     bot.sendMessage(msgId,` 
-     Liquidity Pair: ${lp} 
-     Target hit  ${profit}
+     removeLP(pool.toString(),lp.toString()) 
+     bot.sendMessage(msgId,`  
+     Target hit  ${Number(profit).toFixed(2)}
      `); 
+     bot.sendMessage(msgId, "Liquidity Removed");
      hit = true;
      profit = 0;
      trade = true
@@ -253,9 +213,7 @@ async function getbalance(){
 }
 
 
-// requestAirdrop();
-//removeLP("7quiWGDJZcEHSviSFrcELrN6ZSrgKUgto2JHeTeqkHNw","Bn9Qsj11JiDq7sf1DSiKwwkRbF4XLAnT3BG94FNTc1rT") 
+//requestAirdrop();
+//removeLP("HKifjCSWWX1bU2xT78J7zgxH78Rfbxfww5Zgpc1B3vPp","CcxV9AzN22jM2gLkF2YXwLW7PCfxgwj6KfUCcgubATwT") 
 main();
-//getbalance();
-//7.065518605 
-//7.066332074 
+//getbalance(); 

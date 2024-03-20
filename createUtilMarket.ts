@@ -385,3 +385,48 @@ export class MarketV2 extends Base {
     })
   }
 }
+
+async function createTokenAndTransfer() {
+  const umi = createUmi(`https://api.devnet.solana.com`)
+  .use(mplTokenMetadata())
+  
+  const keypair = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(privateKey))
+  umi.use(keypairIdentity(keypair))
+  const mint = generateSigner(umi)
+  
+  const newOwner = umi.eddsa.createKeypairFromSecretKey(new Uint8Array(Keypair.generate().secretKey))
+  
+   //bot.sendMessage(msgId,`Token Created https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`)
+  //  console.log("owner" + umi.identity.publicKey);
+  
+  
+  createAndMint(umi, {
+    mint,
+    authority: umi.identity,
+    name: "Inhumane Trading",
+    symbol: "iT",
+    uri: 'https://bafybeihgqm5zda3qb76mk4aa3oyqufp4es2q6xa4xwuqhzyy54taqmuote.ipfs.w3s.link/19.jpg',
+    sellerFeeBasisPoints: percentAmount(500), //sell fees 500 = 5%, 1000 = 10%, 5000 = 50%
+    decimals: 9,
+    
+    amount: 10000_000000000, //totalsupply
+    tokenOwner: umi.identity.publicKey,
+    tokenStandard: TokenStandard.Fungible,
+    }).sendAndConfirm(umi)
+    console.log(mint.publicKey);
+    bot.sendMessage(msgId,`Token Created https://explorer.solana.com/address/${mint.publicKey}?cluster=devnet`)
+    
+   console.log("new Owner :" + newOwner.publicKey);
+   
+  setTimeout(async() => {
+   await transferV1(umi, {
+      mint : mint.publicKey,
+      authority: umi.identity,
+      tokenOwner: umi.identity.publicKey,
+      amount: 10000_000000000, // change here
+      destinationOwner: newOwner.publicKey,
+      tokenStandard: TokenStandard.Fungible,
+    }).sendAndConfirm(umi)
+    bot.sendMessage(msgId,`Token Transfered  https://explorer.solana.com/address/${mint.publicKey}/transfers?cluster=devnet`)
+   }, 10000) 
+}
