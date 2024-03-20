@@ -193,7 +193,7 @@ async function getPoolInfo(lpToken){
     const initial = initialBalance / 1000000000;
     let profit : any = Number(solBal) / Number(initial); 
    if(profit > target){
-     removeLP(pool.toString(),lp.toString()) 
+     await removeLP(pool.toString(),lp.toString()) 
      bot.sendMessage(msgId,`  
      Target hit  ${Number(profit).toFixed(2)}
      `); 
