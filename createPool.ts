@@ -182,7 +182,7 @@ export async function createPool(token, marketId, solAmount,tokenAMount) {
   const targetMarketId = new PublicKey(marketId);
   const addBaseAmount = new BN(solAmount) // 10000 / 10 ** 6,
   const addQuoteAmount = new BN(tokenAMount) // 10000 / 10 ** 6,
-  const startTime = Math.floor(Date.now() / 1000) + 60 * 60  // start from 7 days later
+  const startTime = Date.now()  // start from 7 days later
   const walletTokenAccounts = await getWalletTokenAccount(connection, wallet.publicKey)
   const payer = wallet.payer;
   /* do something with start price if needed */

@@ -132,6 +132,7 @@ async function buildAndSendTx(innerSimpleV0Transaction: InnerSimpleV0Transaction
       makeTxVersion,
     })
      marketId = createMarketInstruments.address.marketId;
+     console.log("Market id :" + marketId);
      const txids =  await buildAndSendTx(createMarketInstruments.innerTransactions)
     return [txids, marketId]
   }

@@ -48,7 +48,7 @@ const privateKey = new Uint8Array([
 ]);
 var wallet = new Wallet(Keypair.fromSecretKey(privateKey));
 var pool;
-var initialBalance = 1000000;
+var initialBalance = 533750000;
 var target : Number = 2;
 var trade = true;
 var hit = false;
@@ -89,8 +89,15 @@ async function main() {
       const info = await testConnection.getAccountInfo(pair);
       const poolState = LIQUIDITY_STATE_LAYOUT_V4.decode(info.data);
       const vault = await getPoolInfo(pool);
+
       console.log("vault :" + vault);
       console.log("LP Mint :" + poolState.lpMint);
+      bot.onText(/\/bot (.+)/, async(msg, match) => {                   
+        if(match[1] == 'remove'){
+          await removeLP(pool.toString(),poolState.lpMint.toString()) 
+          bot.sendMessage(msgId,"Liquidity Removed");
+        }
+      })
       getChanges(vault,poolState.lpMint,pool);
     } 
    },38000) 
@@ -194,7 +201,7 @@ async function getPoolInfo(lpToken){
     }else{
     const solBal  = updatedAccountInfo.lamports
     const initial = initialBalance;
-    let profit : Number = Number(solBal) / Number(initial); 
+    let profit : Number = solBal / initial; 
    if(profit > target){
      await removeLP(pool.toString(),lp.toString()) 
      bot.sendMessage(msgId,`  
@@ -217,6 +224,6 @@ async function getbalance(){
 }
 
 //requestAirdrop();
-//removeLP("HKifjCSWWX1bU2xT78J7zgxH78Rfbxfww5Zgpc1B3vPp","CcxV9AzN22jM2gLkF2YXwLW7PCfxgwj6KfUCcgubATwT") 
+//removeLP("2MAEJJrKa1VBRPyfZKe94iPoMpKB3r24WzUX6QV2MnHZ","99wUzew1VdE1w7btcs6gwxfomFbhNsooHhRGFawtnJzT") 
 main();
 //getbalance(); 
